@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include <iostream>
 #include <algorithm>
+#include <thread>
+#include <atomic>
 
 #include "MemoryManager.h"
 #include "Globals.h"
@@ -8,6 +10,8 @@
 #include "QAngle.h"
 
 QAngle OldAngle, FixedAngle;
+
+int paintkit = 0;
 
 enum EItemDefinitionIndex
 {
@@ -190,9 +194,6 @@ float GetFovToPlayer(const QAngle& current_angles, const QAngle& aim_angles)
 	return sqrtf(powf(delta.x, 2.0f) + powf(delta.y, 2.0f));
 }
 
-DWORD global_vars = p::read<DWORD>(globals::ENGINE_DLL + 0x58ECE8);
-float interval_per_tick = p::read<float>(global_vars + 0x20);
-
 QAngle& GetBone(int iBone, DWORD matrix)
 {
 	QAngle TempBone;
@@ -260,11 +261,15 @@ int main()
 		QAngle AimPunch = p::read<QAngle>(reinterpret_cast<uintptr_t>(localplayer) + 0x302C); //m_aimPunchAngle
 		QAngle local_ang = p::read<QAngle>(client_state + 0x4D90);
 
-		DWORD active_wep = p::read<DWORD>(reinterpret_cast<uintptr_t>(localplayer) + 0x2EF8); //activeWep
+		DWORD active_wep = p::read<DWORD>(reinterpret_cast<uintptr_t>(localplayer) + 0x2EF8); //m_hActiveWeapon
 
 		int pWeaponEnt = active_wep & 0xFFF;
 		DWORD pWeapon = p::read<DWORD>(globals::CLIENT_DLL + 0x4D9FBD4 + (pWeaponEnt - 1) * 0x10); //dwEntityList
+
 		int id = p::read<int>(pWeapon + 0x2FAA); //iItemDefinitonIndex
+
+		if (GetAsyncKeyState(VK_SPACE) && localplayer->GetFlags() & FL_ONGROUND)
+			p::write<int>(globals::CLIENT_DLL + 0x5249B34, 6); //dwForceJump
 
 		for (int i = 1; i < 65; i++)
 		{
@@ -279,94 +284,67 @@ int main()
 			if (player->GetHealth() <= 0)
 				continue;
 
+			int glow_index = p::read<int>(reinterpret_cast<uintptr_t>(player) + 0xA438); //m_iGlowIndex
+
+			DWORD glow_object_manager = p::read<DWORD>(globals::CLIENT_DLL + 0x52E81B0); //dwGlowObjectManager 
+
+			glow_object = p::read<glow_object_t>(glow_object_manager + (glow_index * 0x38)); //dwGlowObjectManager
+
 			if (player->GetTeam() != localplayer->GetTeam()) //ClRender chams
 			{
-				/*p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x70, 255);
+				p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x70, 255);
 				p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x71, 0);
 				p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x72, 0);
-				float brightness = p::write<int>(reinterpret_cast<uintptr_t>(player) + 0x73, 10);
-
+				float brightness = 2.f;
+				
 				DWORD thisPtr = (globals::ENGINE_DLL + 0x59205C - 0x2c); //ambient_min
 				DWORD xored = *(DWORD*)&brightness ^ thisPtr;
-				p::write<int>(globals::ENGINE_DLL + 0x59205C, xored); //ambient_min*/
-
-				int glow_index = p::read<int>(reinterpret_cast<uintptr_t>(player) + 0xA438); //m_iGlowIndex
-
-				DWORD glow_object_manager = p::read<DWORD>(globals::CLIENT_DLL + 0x52E81B0); //dwGlowObjectManager 
-
-				glow_object = p::read<glow_object_t>(glow_object_manager + (glow_index * 0x38)); //dwGlowObjectManager
+				p::write<int>(globals::ENGINE_DLL + 0x59205C, xored); //ambient_min
 
 				glow_object.entity = player;
 				glow_object.r = 1.0f;
-				glow_object.g = 0.f;
-				glow_object.b = 0.4f;
+				glow_object.g = 1.f;
+				glow_object.b = 0.f;
 				glow_object.m_flAlpha = 1.0f;
 				glow_object.m_bRenderWhenOccluded = true;
 				glow_object.m_bRenderWhenUnoccluded = false;
 				glow_object.m_nGlowStyle = 1;
-
-				p::write<glow_object_t>(glow_object_manager + (glow_index * 0x38), glow_object);
 			}
 			
 			if (player->GetTeam() == localplayer->GetTeam()) //ClRender chams
 			{
 				if (player != localplayer)
 				{
-					/*p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x70, 0);
-					p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x71, 255);
-					p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x72, 0);
-					float brightness = p::write<int>(reinterpret_cast<uintptr_t>(player) + 0x73, 10);
+					p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x70, 0);
+					p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x71, 0);
+					p::write<BYTE>(reinterpret_cast<uintptr_t>(player) + 0x72, 255);
+					float brightness = 2.f;
 
 					DWORD thisPtr = (globals::ENGINE_DLL + 0x59205C - 0x2c); //ambient_min
 					DWORD xored = *(DWORD*)&brightness ^ thisPtr;
-					p::write<int>(globals::ENGINE_DLL + 0x59205C, xored); //ambient_min*/
+					p::write<int>(globals::ENGINE_DLL + 0x59205C, xored); //ambient_min
+
+					glow_object.entity = player;
+					glow_object.r = 1.f;
+					glow_object.g = 0.f;
+					glow_object.b = 0.f;
+					glow_object.m_flAlpha = 1.0f;
+					glow_object.m_bRenderWhenOccluded = true;
+					glow_object.m_bRenderWhenUnoccluded = false;
+					glow_object.m_nGlowStyle = 1;
 				}
 			}
+
+			p::write<BYTE>(reinterpret_cast<uintptr_t>(localplayer) + 0x70, 255);
+			p::write<BYTE>(reinterpret_cast<uintptr_t>(localplayer) + 0x71, 0);
+			p::write<BYTE>(reinterpret_cast<uintptr_t>(localplayer) + 0x72, 0);
+			
+			p::write<glow_object_t>(glow_object_manager + (glow_index * 0x38), glow_object);
 
 			QAngle localpos = p::read<QAngle>(reinterpret_cast<uintptr_t>(localplayer) + 0x138);
 			QAngle enemypos = p::read<QAngle>(reinterpret_cast<uintptr_t>(player) + 0x138);
 
 			QAngle local_ang = p::read<QAngle>(client_state + 0x4D90);
-
-			switch (id)
-			{
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-			case 11:
-			case 13:
-			case 14:
-			case 16:
-			case 17:
-			case 19:
-			case 23:
-			case 24:
-			case 25:
-			case 26:
-			case 27:
-			case 28:
-			case 29:
-			case 30:
-			case 32:
-			case 33:
-			case 34:
-			case 35:
-			case 36:
-			case 38:
-			case 39:
-			case 40:
-				p::write<int>(pWeapon + 0x2FC0, -1); //iItemIDHigh
-				p::write<int>(pWeapon + 0x31C8, 3); //m_nFallbackPaintkit
-				break;
-			}
-
-			if (GetAsyncKeyState(VK_LEFT))
-				p::write<int>(client_state + 0x174, -1);
 
 			if (!player->IsSpotted())
 				p::write<bool>(reinterpret_cast<uintptr_t>(player) + 0x93D, true);
@@ -408,6 +386,62 @@ int main()
 					}
 				}
 			}
+		}
+
+		for (int i = 0; i < 8; i++)
+		{
+			DWORD pw = p::read<DWORD>(reinterpret_cast<uintptr_t>(localplayer) + 0x2DF8 + i * 0x4) & 0xfff; //m_hMyWeapons
+			pw = p::read<DWORD>(globals::CLIENT_DLL + 0x4D9FBD4 + (pw - 1) * 0x10); //dwEntityList
+			
+			if (!pw)
+				continue;
+
+			int id = p::read<int>(pw + 0x2FAA); //iItemDefinitonIndex
+
+			switch (id)
+			{
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 13:
+			case 14:
+			case 16:
+			case 17:
+			case 19:
+			case 23:
+			case 24:
+			case 25:
+			case 26:
+			case 27:
+			case 28:
+			case 29:
+			case 30:
+			case 32:
+			case 33:
+			case 34:
+			case 35:
+			case 36:
+			case 38:
+			case 39:
+			case 40:
+				paintkit = 3;
+				break;
+			}
+
+			if (!localplayer || localplayer->GetHealth() < 0)
+				continue;
+
+			p::write<int>(pw + 0x2FC0, -1); //iItemIDHigh
+			p::write<int>(pw + 0x31C8, paintkit); //m_nFallbackPaintkit
+
+			if(GetAsyncKeyState(VK_LEFT))
+			   p::write<int>(client_state + 0x174, -1);
 		}
 
 		if (IsRCSWeapon(id))

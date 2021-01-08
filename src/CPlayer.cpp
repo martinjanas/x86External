@@ -2,12 +2,12 @@
 
 CPlayer* CPlayer::GetPlayer(int index)
 {
-	return p::read<CPlayer*>((globals::CLIENT_DLL + 0x4D9FBD4) + (index * 0x10)); //dwEntityList
+	return p::read<CPlayer*>((globals::CLIENT_DLL + 0x4DA2E24) + (index * 0x10)); //dwEntityList
 }
 
 CPlayer* CPlayer::GetLocalPlayer()
 {
-	return p::read<CPlayer*>(globals::CLIENT_DLL + 0xD882BC); //dwLocalPlayer
+	return p::read<CPlayer*>(globals::CLIENT_DLL + 0xD8B2BC); //dwLocalPlayer
 }
 
 bool CPlayer::IsDormant()

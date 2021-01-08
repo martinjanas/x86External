@@ -151,12 +151,16 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="QAngle.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="class_definitions.h" />
     <ClInclude Include="CPlayer.h" />
+    <ClInclude Include="enums.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="QAngle.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

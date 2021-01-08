@@ -1,56 +1,61 @@
 #pragma once
-class QAngle //I have only slept for like 4 hours lol xD ...
+class QAngle //I have onlyaw slept for like 4 hours lol pitchD ...
 {
 public:
 
 	QAngle();
-	QAngle(float x, float y, float z);
+	QAngle(float pitch, float yaw, float roll);
 	float Length() const;
 	float DistTo(const QAngle& vOther) const;
+	float GetMaxPitch();
+	float GetMinPitch();
+	float GetMaxYaw();
+	float GetMinYaw();
+	bool Clamped();
 
 	QAngle& operator=(const QAngle& vOther)
 	{
-		x = vOther.x; y = vOther.y; z = vOther.z;
+		pitch = vOther.pitch; yaw = vOther.yaw; roll = vOther.roll;
 		return *this;
 	}
 
 	QAngle operator-(void) const
 	{
-		return QAngle(-x, -y, -z);
+		return QAngle(-pitch, -yaw, -roll);
 	}
 	QAngle operator+(const QAngle& v) const
 	{
-		return QAngle(x + v.x, y + v.y, z + v.z);
+		return QAngle(pitch + v.pitch, yaw + v.yaw, roll + v.roll);
 	}
 	QAngle operator+(const float& v) const
 	{
-		return QAngle(x + v, y + v, z + v);
+		return QAngle(pitch + v, yaw + v, roll + v);
 	}
 	QAngle operator-(const QAngle& v) const
 	{
-		return QAngle(x - v.x, y - v.y, z - v.z);
+		return QAngle(pitch - v.pitch, yaw - v.yaw, roll - v.roll);
 	}
 	QAngle operator-(const float& v) const
 	{
-		return QAngle(x - v, y - v, z - v);
+		return QAngle(pitch - v, yaw - v, roll - v);
 	}
 	QAngle operator*(float fl) const
 	{
-		return QAngle(x * fl, y * fl, z * fl);
+		return QAngle(pitch * fl, yaw * fl, roll * fl);
 	}
 	QAngle operator*(const QAngle& v) const
 	{
-		return QAngle(x * v.x, y * v.y, z * v.z);
+		return QAngle(pitch * v.pitch, yaw * v.yaw, roll * v.roll);
 	}
 	QAngle operator/(float fl) const
 	{
-		return QAngle(x / fl, y / fl, z / fl);
+		return QAngle(pitch / fl, yaw / fl, roll / fl);
 	}
 	QAngle operator/(const QAngle& v) const
 	{
-		return QAngle(x / v.x, y / v.y, z / v.z);
+		return QAngle(pitch / v.pitch, yaw / v.yaw, roll / v.roll);
 	}
 
-	float x, y, z;
+	float pitch, yaw, roll;
 };
 

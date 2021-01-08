@@ -22,6 +22,9 @@
     <ClCompile Include="QAngle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MemoryManager.h">
@@ -34,6 +37,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="CPlayer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enums.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="class_definitions.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
